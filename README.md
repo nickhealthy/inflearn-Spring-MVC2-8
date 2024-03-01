@@ -42,3 +42,115 @@ HTML Form을 통한 파일 업로드는 다음과 같은 두 가지 방식이 �
   * 폼의 일반 데이터는 각 항목별로 문자가 전송되고, 파일의 경우 Content-Type이 추가되며 바이너리 데이터가 전송됨
 
 ![스크린샷 2024-03-01 오후 4 16 55](https://github.com/nickhealthy/inflearn-Spring-MVC2-8/assets/66216102/4d39a9ee-26de-4804-ae64-ac783b8db3b7)
+
+## 서블릿과 파일 업로드1
+
+먼저 서블릿을 통한 파일 업로드를 실습해보자
+
+
+
+### 예제 - 멀티파트 데이터 받기
+
+[`ServletUploadControllerV1`]
+
+```java
+package hello.upload.controller;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Part;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.io.IOException;
+import java.util.Collection;
+
+@Slf4j
+@Controller
+@RequestMapping("/servlet/v1")
+public class ServletUploadControllerV1 {
+
+    @GetMapping("/upload")
+    public String newFile() {
+        return "upload-form";
+    }
+
+    @PostMapping("/upload")
+    public String saveFileV1(HttpServletRequest request) throws ServletException, IOException {
+        log.info("request = {}", request);
+
+
+        String itemName = request.getParameter("itemName");
+        log.info("itemName = {}", itemName);
+
+        // request.getParts(): multipart/form-data 전송 방식에서 각각 나누어진 부분을 받아서 확인 가능하다.
+        Collection<Part> parts = request.getParts();
+        log.info("parts = {}", parts);
+
+        return "upload-form";
+    }
+}
+```
+
+
+
+
+
+[`upload-form.html`]
+
+* form 태그에 `enctype="multipart/form-data"` 옵션을 추가해주어야 한다.
+
+```html
+<!DOCTYPE HTML>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="utf-8">
+</head>
+<body>
+
+<div class="container">
+
+    <div class="py-5 text-center">
+        <h2>상품 등록 폼</h2>
+    </div>
+
+    <h4 class="mb-3">상품 입력</h4>
+
+    <form th:action method="post" enctype="multipart/form-data">
+        <ul>
+            <li>상품명 <input type="text" name="itemName"></li>
+            <li>파일<input type="file" name="file" ></li>
+        </ul>
+        <input type="submit"/>
+    </form>
+
+</div> <!-- /container -->
+</body>
+</html>
+```
+
+
+
+#### 실행 결과
+
+![스크린샷 2024-03-01 오후 4 29 50](https://github.com/nickhealthy/inflearn-Spring-MVC2-8/assets/66216102/8c037adb-8606-42ed-8e54-6ccec260b63d)
+
+
+
+### 멀티파트 사용 옵션
+
+업로드 사이즈 제한
+
+* `max-file-size` : 파일 하나의 최대 사이즈, 기본 1MB
+* `max-request-size` : 멀티파트 요청 하나에 여러 파일을 업로드 할 수 있는데, 그 전체 합이다. 기본 10MB
+
+```properties
+spring.servlet.multipart.max-file-size=1MB
+spring.servlet.multipart.max-request-size=10MB
+```
+
+
+
